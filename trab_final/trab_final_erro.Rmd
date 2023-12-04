@@ -1,0 +1,81 @@
+---
+title: "Trabalho Final"
+author: "Diego Leonel Costa"
+date: "2023-12-04"
+output: html_document
+---
+#Criando seleção com filtro
+```{r filter,  include=FALSE}
+pacman::p_load(data.table, dplyr,DT, readr, crosstalk, plotly)
+
+municipios_pe <- read.csv2("~/OneDrive/0.R_Projects/1.Livros_cursos/2.hugo_ml/hugo_ml_drcp/bases_originais/clusters_municipios_pe.csv", fileEncoding = "latin1")
+```
+
+```{r, out.width='100%', echo = FALSE, message = FALSE}
+
+municipios_pe %>% datatable(
+  # Título
+  caption = htmltools::tags$caption(
+    # estilo do título usando css
+    style = 'text-align: center; font-size: 18px; font-weight: bold;',
+    'Dados econômicos Municipios PE'),
+  # nomes das colunas
+  colnames = c('Região Desenvolvimento', 'Municípios', 'Distância', 'População', 'PIB', 'vab', "maior_vab", "lat", "long", "ICMS", "IPI", "IPVA", "salario_medio", "pop_ocu_per", "código", "mort_inf"),
+  filter = "top",
+  # extensões para serem acrescentadas
+  extensions = c('Buttons', 'ColReorder', 'Responsive'),
+  # as opções configuram efetivamente as extensões
+  options = list(
+    #
+    dom = 'Blfrtip',
+    # primeiro vamos configurar os botões, adicionando funcionalidades
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    # permite ao usuário reordenar as colunas
+    colReorder = TRUE,
+    # controla quantas linhas serão mostradas por página
+    pageLength = 50, 
+    # ativa o spinner (indicador de processamento)
+    processing = TRUE
+  )
+) %>% # podemos usar também formatações de estilo avançadas para as colunas
+  formatStyle(
+    'salario_medio',
+    color = styleInterval(1.6, c('black', 'white')),
+    background = styleColorBar(municipios_pe$pib, 'lightblue')
+  )
+
+#transformar o dado em shareddate
+```
+
+# Gráficos que se relacionam
+
+```{r, warning=FALSE, out.width='100%', echo = FALSE, message = FALSE}
+
+#filter_slider("salario_medio", "salario", sd, column=~salario_medio, step=0.1, width=250)
+
+filter_checkbox("municipio", "Municipios", sd, ~municipio, inline = TRUE)
+
+sd %>% plot_ly() %>% 
+  add_trace(lon = ~long, lat = ~lat
+          , type = "scattermapbox"
+          , text = ~municipio
+          , alpha = 0.8
+          , mode = "marker"
+          , color = I("#1f77b4")
+          , hoverinfo = ~pib) %>%
+  layout(
+    mapbox = list(
+      style = 'open-street-map',
+      zoom = 3,
+      center = list(lon = -36.9541, 
+                    lat = -8.81371))) %>% highlight(on = "plotly_selected", off = "plotly_deselect", color = 'red')
+  
+sd %>% plot_ly(x = ~municpio, y = ~salario_medio, color = ~pib)
+  
+sd %>% datatable(
+  filter = list(
+    position = 'bottom', clear = FALSE, plain = TRUE)
+  )
+
+```
+
